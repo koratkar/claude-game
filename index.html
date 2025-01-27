@@ -109,7 +109,9 @@
                 // Upper platform
                 { x: 0, y: 150, width: 600, height: 20 },
                 // Lower platform
-                { x: 0, y: 380, width: 600, height: 20 }
+                { x: 0, y: 380, width: 600, height: 20 },
+                // Above Lava platform
+                { x: 220, y: 90, width: 130, height: 6}
             ],
             hazards: [
                 // Red substance on upper level
@@ -274,6 +276,11 @@
             ctx.font = '16px Arial';
             ctx.textAlign = 'left';
             ctx.fillText(`You are on the: ${levelLabel}`, 10, 20);
+            
+            // Ladder entrance highlight
+            ctx.strokeStyle = 'orange';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(level.ladder.x, level.ladder.y, level.ladder.width, 20);
 
         }
 
