@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Grapple Platformer (One-Click Grapple, Faster)</title>
+    <title>Grapple Platformer</title>
     <style>
         body {
             display: flex;
@@ -75,6 +75,12 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // A helper function to keep the player inside the canvas
+        function clampToCanvas() {
+            gameState.player.x = Math.max(0, Math.min(gameState.player.x, canvas.width - gameState.player.width));
+            gameState.player.y = Math.max(0, Math.min(gameState.player.y, canvas.height - gameState.player.height));
+        }
+
         // Game state
         let gameState = {
             player: {
@@ -111,7 +117,7 @@
             ],
             ladder: { x: 500, y: 130, width: 30, height: 250 }, // Extended up for easy access
             key: { x: 50, y: 350, width: 20, height: 20 },      // Key on lower level
-            winCircle: { x: 450, y: 140, radius: 15 }           // Victory circle
+            winCircle: { x: 450, y: 90, radius: 15 }           // Victory circle
         };
 
         function gameLoop() {
@@ -138,6 +144,7 @@
             } else if (!gameState.player.onLadder) {
                 // Apply gravity if not on ladder and not grappling
                 gameState.player.y += 5;
+                clampToCanvas(); // Prevent going below canvas after gravity
             }
 
             // 3. Platform collision if not on ladder
@@ -160,7 +167,7 @@
             // 5. Key collection
             if (!gameState.hasKey && checkCollision(gameState.player, level.key)) {
                 gameState.hasKey = true;
-                alert("you have the key")
+                alert("you have the key");
             }
 
             // 6. Win condition
@@ -260,18 +267,21 @@
         document.getElementById('leftBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon) {
                 gameState.player.x -= gameState.player.speed;
+                clampToCanvas();
             }
         });
 
         document.getElementById('rightBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon) {
                 gameState.player.x += gameState.player.speed;
+                clampToCanvas();
             }
         });
 
         document.getElementById('upBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon && gameState.player.onLadder) {
                 gameState.player.y -= gameState.player.speed;
+                clampToCanvas();
             } else {
                 alert("You are not on the ladder. You cannot move up.");
             }
@@ -280,6 +290,7 @@
         document.getElementById('downBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon && gameState.player.onLadder) {
                 gameState.player.y += gameState.player.speed;
+                clampToCanvas();
             } else {
                 alert("You are not on the ladder. You cannot move down.");
             }
@@ -352,6 +363,9 @@
                 gameState.player.x = newX - gameState.player.width / 2;
                 gameState.player.y = newY - gameState.player.height / 2;
 
+                // Keep player within the canvas during grapple
+                clampToCanvas();
+
                 // Check if we've reached the end
                 if (gameState.grappleState.progress >= 1) {
                     // Grapple is done
@@ -405,7 +419,7 @@
             document.getElementById('grappleBtn').style.background = 'red';
             gameState.hasKey = false;
             gameState.gameWon = false;
-            alert("you died")
+            alert("you died");
         }
 
         // Start the game
