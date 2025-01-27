@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Grapple Platformer (No Character Click Needed)</title>
+    <title>Grapple Platformer (One-Click Grapple, Faster)</title>
     <style>
         body {
             display: flex;
@@ -67,10 +67,10 @@
         <h2>Game Instructions</h2>
         <p>Complete these tasks in order:</p>
         <ol>
-            <li>Use DOWN button while standing above the ladder to descend</li>
-            <li>Collect the golden key on the lower level</li>
-            <li>Return up the ladder using the UP button</li>
-            <li>Grapple across the red substance to reach the victory circle</li>
+            <li>Use DOWN button while standing above the ladder to descend.</li>
+            <li>Collect the golden key on the lower level.</li>
+            <li>Return up the ladder using the UP button.</li>
+            <li>Click GRAPPLE, then click once where you want to swing — the faster, single-click grapple will carry you across.</li>
         </ol>
     </div>
 
@@ -86,7 +86,6 @@
                 width: 20,
                 height: 20,
                 speed: 5,
-                isGrappling: false,
                 onLadder: false
             },
             grappleState: {
@@ -95,8 +94,7 @@
                 startY: 0,
                 endX: 0,
                 endY: 0,
-                progress: 0,
-                isStartSet: false // We'll use this to track if we've set the start point yet
+                progress: 0
             },
             hasKey: false,
             gameWon: false
@@ -114,10 +112,9 @@
                 // Red substance on upper level
                 { x: 200, y: 140, width: 200, height: 10 }
             ],
-            // Ladder extended upward so you can catch it from above
-            ladder: { x: 500, y: 130, width: 30, height: 250 },
-            key: { x: 50, y: 350, width: 20, height: 20 }, // Key on lower level
-            winCircle: { x: 450, y: 120, radius: 15 }      // Victory circle
+            ladder: { x: 500, y: 130, width: 30, height: 250 }, // Extended up for easy access
+            key: { x: 50, y: 350, width: 20, height: 20 },      // Key on lower level
+            winCircle: { x: 450, y: 120, radius: 15 }           // Victory circle
         };
 
         function gameLoop() {
@@ -129,7 +126,7 @@
         function update() {
             if (gameState.gameWon) return;
 
-            // 1. Check ladder overlap
+            // 1. Ladder check
             const ladderZone = {
                 x: level.ladder.x - 10,
                 y: level.ladder.y,
@@ -138,11 +135,11 @@
             };
             gameState.player.onLadder = checkCollision(gameState.player, ladderZone);
 
-            // 2. Grapple / Ladder logic
+            // 2. Grapple / Ladder / Gravity
             if (gameState.grappleState.active) {
-                // Grapple is controlled by animation
+                // Grapple is controlled by animation, so no standard movement here
             } else if (!gameState.player.onLadder) {
-                // Apply gravity when not grappling or on the ladder
+                // Apply gravity if not on ladder and not grappling
                 gameState.player.y += 5;
             }
 
@@ -150,12 +147,13 @@
             if (!gameState.player.onLadder && !gameState.grappleState.active) {
                 level.platforms.forEach(platform => {
                     if (checkCollision(gameState.player, platform)) {
+                        // Place player on top of the platform
                         gameState.player.y = platform.y - gameState.player.height;
                     }
                 });
             }
 
-            // 4. Hazards
+            // 4. Hazard check
             level.hazards.forEach(hazard => {
                 if (checkCollision(gameState.player, hazard)) {
                     resetLevel();
@@ -170,8 +168,8 @@
             // 6. Win condition
             if (gameState.hasKey) {
                 const playerCenter = {
-                    x: gameState.player.x + gameState.player.width/2,
-                    y: gameState.player.y + gameState.player.height/2
+                    x: gameState.player.x + gameState.player.width / 2,
+                    y: gameState.player.y + gameState.player.height / 2
                 };
                 const dist = Math.hypot(
                     playerCenter.x - level.winCircle.x,
@@ -188,36 +186,36 @@
             ctx.fillStyle = '#f8f8f8';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw platforms
+            // Platforms
             ctx.fillStyle = 'black';
             level.platforms.forEach(platform => {
                 ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
             });
 
-            // Draw hazards
+            // Hazards
             ctx.fillStyle = 'red';
             level.hazards.forEach(hazard => {
                 ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
             });
 
-            // Draw ladder
+            // Ladder
             ctx.fillStyle = 'gray';
             ctx.fillRect(level.ladder.x, level.ladder.y, level.ladder.width, level.ladder.height);
 
-            // Draw key if not collected
+            // Key (if not collected)
             if (!gameState.hasKey) {
                 ctx.fillStyle = 'gold';
                 ctx.fillRect(level.key.x, level.key.y, level.key.width, level.key.height);
             }
 
-            // Draw win circle
+            // Win circle
             ctx.beginPath();
             ctx.arc(level.winCircle.x, level.winCircle.y, level.winCircle.radius, 0, Math.PI * 2);
             ctx.fillStyle = gameState.hasKey ? 'green' : 'gray';
             ctx.fill();
             ctx.closePath();
 
-            // Draw player
+            // Player
             ctx.fillStyle = 'black';
             ctx.fillRect(gameState.player.x, gameState.player.y, 
                          gameState.player.width, gameState.player.height);
@@ -225,15 +223,17 @@
             ctx.strokeRect(gameState.player.x, gameState.player.y,
                            gameState.player.width, gameState.player.height);
 
-            // Draw grapple line (if active)
+            // Grapple line
             if (gameState.grappleState.active) {
                 ctx.beginPath();
                 ctx.moveTo(gameState.grappleState.startX, gameState.grappleState.startY);
                 ctx.strokeStyle = 'black';
                 const controlX = (gameState.grappleState.startX + gameState.grappleState.endX) / 2;
                 const controlY = Math.min(gameState.grappleState.startY, gameState.grappleState.endY) - 50;
-                ctx.quadraticCurveTo(controlX, controlY,
-                                     gameState.grappleState.endX, gameState.grappleState.endY);
+                ctx.quadraticCurveTo(
+                    controlX, controlY,
+                    gameState.grappleState.endX, gameState.grappleState.endY
+                );
                 ctx.stroke();
             }
 
@@ -246,7 +246,7 @@
             }
         }
 
-        // Control handlers
+        // Movement buttons
         document.getElementById('leftBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon) {
                 gameState.player.x -= gameState.player.speed;
@@ -271,87 +271,83 @@
             }
         });
 
-        // Grapple
+        // Grapple button
         let grappleMode = false;
         document.getElementById('grappleBtn').addEventListener('click', () => {
             if (!gameState.gameWon) {
                 grappleMode = !grappleMode;
-                // Reset our grapple start tracking when toggling mode off->on
-                if (grappleMode) {
-                    gameState.grappleState.isStartSet = false;
-                    document.getElementById('grappleBtn').style.background = 'darkred';
-                } else {
-                    document.getElementById('grappleBtn').style.background = 'red';
-                }
+                document.getElementById('grappleBtn').style.background = grappleMode ? 'darkred' : 'red';
             }
         });
 
+        // Single click to launch grapple
         canvas.addEventListener('click', (e) => {
-            if (gameState.gameWon || !grappleMode) return;
+            if (!grappleMode || gameState.gameWon) return;
 
+            // If there's already a grapple in progress, ignore or cancel it
+            if (gameState.grappleState.active) return;
+
+            // Set up the grapple from player's current center -> mouse click
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
 
-            // If the grapple is not yet active, set the start from player's position
-            // when the user clicks ANYWHERE the first time.
-            if (!gameState.grappleState.active && !gameState.grappleState.isStartSet) {
-                gameState.grappleState.startX = gameState.player.x + gameState.player.width / 2;
-                gameState.grappleState.startY = gameState.player.y + gameState.player.height / 2;
-                gameState.grappleState.active = true;
-                gameState.grappleState.isStartSet = true;
-            } 
-            // If the grapple has an active start, this click sets the end and begins animation
-            else if (gameState.grappleState.active && gameState.grappleState.isStartSet) {
-                gameState.grappleState.endX = x;
-                gameState.grappleState.endY = y;
-                startGrappleAnimation();
-            }
+            gameState.grappleState.startX = gameState.player.x + gameState.player.width / 2;
+            gameState.grappleState.startY = gameState.player.y + gameState.player.height / 2;
+            gameState.grappleState.endX = mouseX;
+            gameState.grappleState.endY = mouseY;
+            gameState.grappleState.progress = 0;
+            gameState.grappleState.active = true;
+
+            startGrappleAnimation();
         });
 
         function startGrappleAnimation() {
-            if (!gameState.grappleState.active) return;
-            
-            gameState.grappleState.progress = 0;
             let animationFrameId;
             
             const animate = () => {
+                // If something canceled the grapple, stop
                 if (!gameState.grappleState.active) {
                     cancelAnimationFrame(animationFrameId);
                     return;
                 }
 
-                gameState.grappleState.progress += 0.02;
-                
+                // Move progress more quickly (from 0.02 -> 0.1)
+                gameState.grappleState.progress += 0.1; 
+
                 const t = gameState.grappleState.progress;
                 const startX = gameState.grappleState.startX;
                 const startY = gameState.grappleState.startY;
                 const endX = gameState.grappleState.endX;
                 const endY = gameState.grappleState.endY;
+                // Control point for the arc
                 const controlX = (startX + endX) / 2;
                 const controlY = Math.min(startY, endY) - 50;
 
-                const newX = (1 - t) * (1 - t) * startX 
-                           + 2 * (1 - t) * t * controlX 
-                           + t * t * endX;
-                const newY = (1 - t) * (1 - t) * startY 
-                           + 2 * (1 - t) * t * controlY 
-                           + t * t * endY;
+                // Quadratic bezier interpolation
+                const newX =
+                    (1 - t) * (1 - t) * startX +
+                    2 * (1 - t) * t * controlX +
+                    t * t * endX;
+                const newY =
+                    (1 - t) * (1 - t) * startY +
+                    2 * (1 - t) * t * controlY +
+                    t * t * endY;
 
-                // Move player
+                // Update player position
                 gameState.player.x = newX - gameState.player.width / 2;
                 gameState.player.y = newY - gameState.player.height / 2;
 
-                // Check if finished
+                // Check if we've reached the end
                 if (gameState.grappleState.progress >= 1) {
+                    // Grapple is done
                     gameState.grappleState.active = false;
                     grappleMode = false;
-                    gameState.grappleState.isStartSet = false;
                     document.getElementById('grappleBtn').style.background = 'red';
                     return;
                 }
 
-                // Collision check with platforms mid-grapple
+                // Check collision with platforms mid-grapple
                 let collision = false;
                 level.platforms.forEach(platform => {
                     if (checkCollision(gameState.player, platform)) {
@@ -360,12 +356,12 @@
                 });
 
                 if (collision) {
-                    // Cancel grapple on collision
+                    // Reset if we hit a platform mid-flight
                     gameState.grappleState.active = false;
                     grappleMode = false;
-                    gameState.grappleState.isStartSet = false;
                     document.getElementById('grappleBtn').style.background = 'red';
-                    // Reset player to start
+
+                    // Reset player to the grapple start (optional, or you can let them land on the platform)
                     gameState.player.x = startX - gameState.player.width / 2;
                     gameState.player.y = startY - gameState.player.height / 2;
                     return;
@@ -376,22 +372,25 @@
             animate();
         }
 
-        // Utility collision checks
+        // Collision utility
         function checkCollision(rect1, rect2) {
-            return rect1.x < rect2.x + rect2.width &&
-                   rect1.x + rect1.width > rect2.x &&
-                   rect1.y < rect2.y + rect2.height &&
-                   rect1.y + rect1.height > rect2.y;
+            return (
+                rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y
+            );
         }
 
+        // Reset if we fall into hazards
         function resetLevel() {
             gameState.player.x = 50;
             gameState.player.y = 60;
             gameState.grappleState.active = false;
-            gameState.grappleState.isStartSet = false;
-            gameState.player.onLadder = false;
             grappleMode = false;
             document.getElementById('grappleBtn').style.background = 'red';
+            gameState.hasKey = false;
+            gameState.gameWon = false;
         }
 
         // Start the game
