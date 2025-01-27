@@ -117,7 +117,7 @@
             ],
             ladder: { x: 500, y: 130, width: 30, height: 250 }, // Extended up for easy access
             key: { x: 50, y: 350, width: 20, height: 20 },      // Key on lower level
-            winCircle: { x: 450, y: 120, radius: 15 }           // Victory circle
+            winCircle: { x: 450, y: 140, radius: 15 }           // Victory circle
         };
 
         function gameLoop() {
@@ -238,6 +238,13 @@
                     gameState.grappleState.endX, gameState.grappleState.endY
                 );
                 ctx.stroke();
+            }
+            
+            if (gameState.player.onLadder) {
+                ctx.fillStyle = 'black';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('You are on the ladder', canvas.width / 2, canvas.height / 2);
             }
 
             // Win message
@@ -394,6 +401,7 @@
             document.getElementById('grappleBtn').style.background = 'red';
             gameState.hasKey = false;
             gameState.gameWon = false;
+            alert("you died")
         }
 
         // Start the game
