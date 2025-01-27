@@ -57,23 +57,17 @@
         <button id="rightBtn">RIGHT</button>
         <button id="upBtn">UP</button>
         <button id="downBtn">DOWN</button>
-        <button id="grappleBtn">GRAPPLE</button>
+        <button id="grappleBtn"><code>GRAPPLE</code></button>
     </div>
-    <div class="notes-area">
-        <label for="notesInput">Agent Notes:</label>
-        <textarea id="notesInput" placeholder="Write your observations and plans here..."></textarea>
-    </div>
+    
     <div class="instructions">
         <h2>Game Instructions</h2>
-        <p>Complete these tasks in order:</p>
         <ol>
             <li>You are the black square.</li>
             <li>You spawn on the top level.</li>
-            <li>You <i>have</i> to be on top of the blue ladder to get to the lower level.</li>
-            <li>Use DOWN button while standing above the ladder to descend. If you are not standing above the ladder it will not work.</li>
-            <li>Collect the golden key on the lower level.</li>
-            <li>Return up the ladder using the UP button.</li>
-            <li>There are a few hazards, to get over them, click GRAPPLE, then click once on the screen where you want to swing. However, grapple can't take you across the floor boundary.</li>
+            <li>The blue ladder lets you to get to the bottom level.</li>
+            <li>To beat the game, find the golden key on the lower level, and return it to the victory circle on the top level.</li>
+            <li>One means of navigation is the <code>GRAPPLE</code> button. To use it, press <code>GRAPPLE</code> and click precisely where you want to go on the game screen. You will then automatically swing to that location, as long as it is on the same level.</li>
         </ol>
     </div>
 
@@ -88,7 +82,7 @@
                 y: 60,
                 width: 20,
                 height: 20,
-                speed: 20,
+                speed: 35,
                 onLadder: false
             },
             grappleState: {
