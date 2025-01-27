@@ -166,6 +166,7 @@
             // 5. Key collection
             if (!gameState.hasKey && checkCollision(gameState.player, level.key)) {
                 gameState.hasKey = true;
+                alert("you have the key")
             }
 
             // 6. Win condition
@@ -209,6 +210,11 @@
             if (!gameState.hasKey) {
                 ctx.fillStyle = 'gold';
                 ctx.fillRect(level.key.x, level.key.y, level.key.width, level.key.height);
+                ctx.fillStyle = 'black';
+                
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('You do not have the key.', 0, 50);
             }
 
             // Win circle
