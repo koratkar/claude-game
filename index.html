@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grapple Platformer with Fixed Ladder</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            border: 2px solid black;
+            background: white;
+            margin: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #grappleBtn {
+            background: red;
+            color: white;
+            border: none;
+        }
+        .notes-area {
+            width: 600px;
+            margin: 20px;
+        }
+        #notesInput {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .instructions {
+            max-width: 600px;
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <div class="controls">
+        <button id="leftBtn">LEFT</button>
+        <button id="rightBtn">RIGHT</button>
+        <button id="upBtn">UP</button>
+        <button id="downBtn">DOWN</button>
+        <button id="grappleBtn">GRAPPLE</button>
+    </div>
+    <div class="notes-area">
+        <label for="notesInput">Agent Notes:</label>
+        <textarea id="notesInput" placeholder="Write your observations and plans here..."></textarea>
+    </div>
+    <div class="instructions">
+        <h2>Game Instructions</h2>
+        <p>Complete these tasks in order:</p>
+        <ol>
+            <li>Use DOWN button while standing above the ladder to descend</li>
+            <li>Collect the golden key on the lower level</li>
+            <li>Return up the ladder using the UP button</li>
+            <li>Grapple across the red substance to reach the victory circle</li>
+        </ol>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameState = {
+            player: {
+                x: 50,
+                y: 60,
+                width: 20,
+                height: 20,
+                speed: 5,
+                isGrappling: false,
+                onLadder: false
+            },
+            grappleState: {
+                active: false,
+                startX: 0,
+                startY: 0,
+                endX: 0,
+                endY: 0,
+                progress: 0
+            },
+            hasKey: false,
+            gameWon: false
+        };
+
+        // Level design
+        const level = {
+            platforms: [
+                // Upper platform
+                { x: 0, y: 150, width: 600, height: 20 },
+                // Lower platform
+                { x: 0, y: 380, width: 600, height: 20 }
+            ],
+            hazards: [
+                // Red substance on upper level
+                { x: 200, y: 140, width: 200, height: 10 }
+            ],
+            // Extended ladder up 20px so the player can catch it
+            ladder: { x: 500, y: 130, width: 30, height: 250 },  
+            key: { x: 50, y: 350, width: 20, height: 20 },       // Key on lower level
+            winCircle: { x: 450, y: 120, radius: 15 }            // Victory circle
+        };
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            if (gameState.gameWon) return;
+
+            // 1. Determine if player is overlapping ladder zone first
+            const ladderZone = {
+                x: level.ladder.x - 10,
+                y: level.ladder.y - 0, // can shift if needed
+                width: level.ladder.width + 20,
+                height: level.ladder.height + 0
+            };
+            gameState.player.onLadder = checkCollision(gameState.player, ladderZone);
+
+            // 2. If grappling, let the animation handle movement.
+            //    If on ladder, skip gravity and let up/down button handle movement.
+            //    Otherwise, apply gravity.
+            if (gameState.grappleState.active) {
+                // Grapple movement handled in animation
+            } else if (!gameState.player.onLadder) {
+                // Apply gravity when not grappling or on ladder
+                gameState.player.y += 5;
+            }
+
+            // 3. Platform collisions only if NOT on ladder
+            if (!gameState.player.onLadder && !gameState.grappleState.active) {
+                level.platforms.forEach(platform => {
+                    if (checkCollision(gameState.player, platform)) {
+                        // Keep player on top of platform
+                        gameState.player.y = platform.y - gameState.player.height;
+                    }
+                });
+            }
+
+            // 4. Hazard collision resets level
+            level.hazards.forEach(hazard => {
+                if (checkCollision(gameState.player, hazard)) {
+                    resetLevel();
+                }
+            });
+
+            // 5. Key collection
+            if (!gameState.hasKey && checkCollision(gameState.player, level.key)) {
+                gameState.hasKey = true;
+            }
+
+            // 6. Win condition: must have key and touch win circle
+            if (gameState.hasKey) {
+                const playerCenter = {
+                    x: gameState.player.x + gameState.player.width / 2,
+                    y: gameState.player.y + gameState.player.height / 2
+                };
+                const dist = Math.hypot(
+                    playerCenter.x - level.winCircle.x,
+                    playerCenter.y - level.winCircle.y
+                );
+                if (dist < level.winCircle.radius) {
+                    gameState.gameWon = true;
+                }
+            }
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#f8f8f8';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw platforms
+            ctx.fillStyle = 'black';
+            level.platforms.forEach(platform => {
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+            });
+
+            // Draw hazards
+            ctx.fillStyle = 'red';
+            level.hazards.forEach(hazard => {
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
+            });
+
+            // Draw ladder
+            ctx.fillStyle = 'gray';
+            ctx.fillRect(level.ladder.x, level.ladder.y, level.ladder.width, level.ladder.height);
+
+            // Draw key if not collected
+            if (!gameState.hasKey) {
+                ctx.fillStyle = 'gold';
+                ctx.fillRect(level.key.x, level.key.y, level.key.width, level.key.height);
+            }
+
+            // Draw win circle
+            ctx.beginPath();
+            ctx.arc(level.winCircle.x, level.winCircle.y, level.winCircle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gameState.hasKey ? 'green' : 'gray';
+            ctx.fill();
+            ctx.closePath();
+
+            // Draw player
+            ctx.fillStyle = 'black';
+            ctx.fillRect(gameState.player.x, gameState.player.y, 
+                         gameState.player.width, gameState.player.height);
+            ctx.strokeStyle = 'white';
+            ctx.strokeRect(gameState.player.x, gameState.player.y,
+                           gameState.player.width, gameState.player.height);
+
+            // Draw grapple line if active
+            if (gameState.grappleState.active) {
+                ctx.beginPath();
+                ctx.moveTo(gameState.grappleState.startX, gameState.grappleState.startY);
+                ctx.strokeStyle = 'black';
+                const controlX = (gameState.grappleState.startX + gameState.grappleState.endX) / 2;
+                const controlY = Math.min(gameState.grappleState.startY, gameState.grappleState.endY) - 50;
+                ctx.quadraticCurveTo(controlX, controlY,
+                                     gameState.grappleState.endX, gameState.grappleState.endY);
+                ctx.stroke();
+            }
+
+            // Draw win message
+            if (gameState.gameWon) {
+                ctx.fillStyle = 'green';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('You Won!', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        // Control handlers
+        document.getElementById('leftBtn').addEventListener('mousedown', () => {
+            if (!gameState.gameWon) {
+                gameState.player.x -= gameState.player.speed;
+            }
+        });
+
+        document.getElementById('rightBtn').addEventListener('mousedown', () => {
+            if (!gameState.gameWon) {
+                gameState.player.x += gameState.player.speed;
+            }
+        });
+
+        // Move UP on the ladder
+        document.getElementById('upBtn').addEventListener('mousedown', () => {
+            if (!gameState.gameWon && gameState.player.onLadder) {
+                gameState.player.y -= gameState.player.speed;
+            }
+        });
+
+        // Move DOWN on the ladder
+        document.getElementById('downBtn').addEventListener('mousedown', () => {
+            if (!gameState.gameWon && gameState.player.onLadder) {
+                gameState.player.y += gameState.player.speed;
+            }
+        });
+
+        let grappleMode = false;
+        document.getElementById('grappleBtn').addEventListener('click', () => {
+            if (!gameState.gameWon) {
+                grappleMode = !grappleMode;
+                document.getElementById('grappleBtn').style.background = 
+                    grappleMode ? 'darkred' : 'red';
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (gameState.gameWon || !grappleMode) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // First click sets start of grapple if not active
+            if (!gameState.grappleState.active) {
+                if (checkPointCollision(x, y, gameState.player)) {
+                    gameState.grappleState.startX = gameState.player.x + gameState.player.width/2;
+                    gameState.grappleState.startY = gameState.player.y + gameState.player.height/2;
+                    gameState.grappleState.active = true;
+                }
+            } else {
+                // Second click sets end point and starts animation
+                gameState.grappleState.endX = x;
+                gameState.grappleState.endY = y;
+                startGrappleAnimation();
+            }
+        });
+
+        function startGrappleAnimation() {
+            if (!gameState.grappleState.active) return;
+            
+            gameState.grappleState.progress = 0;
+            let animationFrameId;
+            
+            const animate = () => {
+                if (!gameState.grappleState.active) {
+                    cancelAnimationFrame(animationFrameId);
+                    return;
+                }
+
+                gameState.grappleState.progress += 0.02;
+                
+                const t = gameState.grappleState.progress;
+                const startX = gameState.grappleState.startX;
+                const startY = gameState.grappleState.startY;
+                const endX = gameState.grappleState.endX;
+                const endY = gameState.grappleState.endY;
+                const controlX = (startX + endX) / 2;
+                const controlY = Math.min(startY, endY) - 50;
+
+                const newX = Math.pow(1-t, 2) * startX 
+                           + 2 * (1-t) * t * controlX 
+                           + Math.pow(t, 2) * endX;
+                const newY = Math.pow(1-t, 2) * startY 
+                           + 2 * (1-t) * t * controlY 
+                           + Math.pow(t, 2) * endY;
+
+                // Move player
+                gameState.player.x = newX - gameState.player.width/2;
+                gameState.player.y = newY - gameState.player.height/2;
+
+                // Check end condition
+                if (gameState.grappleState.progress >= 1) {
+                    // End grapple
+                    gameState.grappleState.active = false;
+                    grappleMode = false;
+                    document.getElementById('grappleBtn').style.background = 'red';
+                    return;
+                }
+
+                // Check for collisions during grapple
+                let collision = false;
+                level.platforms.forEach(platform => {
+                    if (checkCollision(gameState.player, platform)) {
+                        collision = true;
+                    }
+                });
+
+                if (collision) {
+                    // Cancel grapple if we hit a platform
+                    gameState.grappleState.active = false;
+                    grappleMode = false;
+                    document.getElementById('grappleBtn').style.background = 'red';
+                    // Reset player position
+                    gameState.player.x = gameState.grappleState.startX - gameState.player.width/2;
+                    gameState.player.y = gameState.grappleState.startY - gameState.player.height/2;
+                    return;
+                }
+
+                animationFrameId = requestAnimationFrame(animate);
+            };
+            
+            animate();
+        }
+
+        // Utility collision checks
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        function checkPointCollision(x, y, rect) {
+            return x >= rect.x && x <= rect.x + rect.width &&
+                   y >= rect.y && y <= rect.y + rect.height;
+        }
+
+        function resetLevel() {
+            gameState.player.x = 50;
+            gameState.player.y = 60;
+            gameState.grappleState.active = false;
+            gameState.player.onLadder = false;
+            grappleMode = false;
+            document.getElementById('grappleBtn').style.background = 'red';
+        }
+
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>
