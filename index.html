@@ -261,6 +261,20 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('You Won!', canvas.width / 2, canvas.height / 2);
             }
+
+            // floor level state determination
+            const boundaryY = 265;  // (150 + 380) / 2, or whatever makes sense in your layout
+            // Calculate the bottom of the player’s rectangle.
+            const playerBottom = gameState.player.y + gameState.player.height;
+            // If the player’s bottom is above this boundary, assume top level; otherwise bottom.
+            const levelLabel = (playerBottom < boundaryY) ? "TOP LEVEL" : "BOTTOM LEVEL";         
+
+            // After drawing everything, but before or after your "win" text
+            ctx.fillStyle = 'black';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`You are on the: ${levelLabel}`, 10, 20);
+
         }
 
         // Movement buttons
