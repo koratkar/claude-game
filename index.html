@@ -67,10 +67,12 @@
         <h2>Game Instructions</h2>
         <p>Complete these tasks in order:</p>
         <ol>
+            <li>You are the black square.</li>
+            <li>You have to move across the screen to get above the blue ladder.</li>
             <li>Use DOWN button while standing above the ladder to descend.</li>
             <li>Collect the golden key on the lower level.</li>
             <li>Return up the ladder using the UP button.</li>
-            <li>Click GRAPPLE, then click once where you want to swing — the faster, single-click grapple will carry you across.</li>
+            <li>There are a few hazards, to get over them, click GRAPPLE, then click once on the screen where you want to swing. However, grapple can't take you across the floor boundary.</li>
         </ol>
     </div>
 
@@ -199,7 +201,7 @@
             });
 
             // Ladder
-            ctx.fillStyle = 'gray';
+            ctx.fillStyle = 'blue';
             ctx.fillRect(level.ladder.x, level.ladder.y, level.ladder.width, level.ladder.height);
 
             // Key (if not collected)
