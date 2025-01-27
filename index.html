@@ -272,12 +272,16 @@
         document.getElementById('upBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon && gameState.player.onLadder) {
                 gameState.player.y -= gameState.player.speed;
+            } else {
+                alert("You are not on the ladder. You cannot move up.");
             }
         });
 
         document.getElementById('downBtn').addEventListener('mousedown', () => {
             if (!gameState.gameWon && gameState.player.onLadder) {
                 gameState.player.y += gameState.player.speed;
+            } else {
+                alert("You are not on the ladder. You cannot move down.");
             }
         });
 
