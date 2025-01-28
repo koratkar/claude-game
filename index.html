@@ -133,7 +133,7 @@
 
             // 1. Ladder check
             const ladderZone = {
-                x: level.ladder.x - 10,
+                x: level.ladder.x,
                 y: level.ladder.y,
                 width: level.ladder.width + 5,
                 height: level.ladder.height
@@ -221,9 +221,10 @@
                 ctx.fillText('key', level.key.x+10, level.key.y+10);
                 ctx.fillStyle = 'black';
                 
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText('You do not have the key.', 0, 50);
+                // key text
+                //ctx.font = '20px Arial';
+                //ctx.textAlign = 'left';
+                //ctx.fillText('You do not have the key.', 0, 50);
             }
 
             // Win circle
@@ -310,7 +311,7 @@
                 gameState.player.y -= gameState.player.speed;
                 clampToCanvas();
             } else {
-                alert("You are not on the ladder. You cannot move up.");
+                //alert("You are not on the ladder. You cannot move up.");
             }
         });
 
@@ -319,7 +320,7 @@
                 gameState.player.y += gameState.player.speed;
                 clampToCanvas();
             } else {
-                alert("You are not on the ladder. You cannot move down.");
+                //alert("You are not on the ladder. You cannot move down.");
             }
         });
 
@@ -365,7 +366,7 @@
                 }
 
                 // Move progress more quickly (from 0.02 -> 0.1)
-                gameState.grappleState.progress += 0.1; 
+                gameState.grappleState.progress += 0.08; 
 
                 const t = gameState.grappleState.progress;
                 const startX = gameState.grappleState.startX;
@@ -413,8 +414,10 @@
                 if (collision) {
                     // Reset if we hit a platform mid-flight
                     gameState.grappleState.active = false;
-                    grappleMode = false;
-                    document.getElementById('grappleBtn').style.background = 'red';
+                    
+                    // cancels grapple
+                      //grappleMode = false;
+                      //document.getElementById('grappleBtn').style.background = 'red';
 
                     // Reset player to the grapple start (optional, or you can let them land on the platform)
                     gameState.player.x = startX - gameState.player.width / 2;
