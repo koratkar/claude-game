@@ -135,7 +135,7 @@
             const ladderZone = {
                 x: level.ladder.x - 10,
                 y: level.ladder.y,
-                width: level.ladder.width + 20,
+                width: level.ladder.width + 5,
                 height: level.ladder.height
             };
             gameState.player.onLadder = checkCollision(gameState.player, ladderZone);
@@ -213,6 +213,12 @@
             if (!gameState.hasKey) {
                 ctx.fillStyle = 'gold';
                 ctx.fillRect(level.key.x, level.key.y, level.key.width, level.key.height);
+                
+                ctx.fillStyle = 'black';
+                
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('key', level.key.x+10, level.key.y+10);
                 ctx.fillStyle = 'black';
                 
                 ctx.font = '20px Arial';
